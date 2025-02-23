@@ -1,0 +1,401 @@
+openapi: 3.1.0
+info:
+  title: Core System Control API
+  description: API điều khiển hệ thống core với 30 actions thiết yếu
+  version: 1.0.0
+
+servers:
+  - url: https://doremonsieucap88.com
+    description: Production server
+
+paths:
+  # 1. SYSTEM CONTROL (7 endpoints)
+  /api/system/elevate:
+    post:
+      operationId: elevateSystemPrivileges
+      summary: Nâng cao quyền hạn cho toàn bộ API
+      tags: [System]
+      description: Kích hoạt full quyền root/sudo cho mọi thao tác
+      responses:
+        '200':
+          description: Quyền đã được cấp thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sudo: {type: boolean}
+                  access: {type: string}
+                  message: {type: string}
+
+  /api/system/monitor:
+    get:
+      operationId: getSystemMonitor
+      summary: Lấy thông tin monitoring hệ thống
+      tags: [System]
+      responses:
+        '200':
+          description: Thông tin monitoring
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
+
+  /api/system/processes:
+    get:
+      operationId: getSystemProcesses
+      summary: Lấy danh sách process
+      tags: [System] 
+      responses:
+        '200':
+          description: Danh sách process
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessInfo'
+
+  # 2. TASK MANAGEMENT (3 endpoints) 
+  /api/tasks/execute:
+    post:
+      operationId: executeTask
+      summary: Thực thi tác vụ dài
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command: {type: string}
+                timeout: {type: integer, default: 300000}
+      responses:
+        '200':
+          description: Task được tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId: {type: string}
+                  status: {type: string, enum: [accepted]}
+                  statusEndpoint: {type: string}
+
+  /api/tasks/{taskId}/status:
+    get:
+      operationId: getTaskStatus
+      summary: Kiểm tra trạng thái task
+      tags: [Tasks]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trạng thái task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+
+  /api/tasks/{taskId}/stop:
+    post:
+      operationId: stopTask
+      summary: Dừng task đang chạy
+      tags: [Tasks]
+      parameters:
+        - name: taskId
+          in: path
+          required: true 
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task đã dừng thành công
+
+  # 3. FILE OPERATIONS (6 endpoints)
+  /api/files/upload:
+    post:
+      operationId: uploadFile
+      summary: Upload file lên server
+      tags: [Files]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: {type: string, format: binary}
+                destination: {type: string, default: uploads}
+      responses:
+        '200':
+          $ref: '#/components/responses/FileUploadSuccess'
+
+  /api/files/download/{filename}:
+    get:
+      operationId: downloadFile
+      summary: Download file từ server
+      tags: [Files]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File downloaded successfully
+
+  /api/files/delete/{filename}:
+    delete:
+      operationId: deleteFile
+      summary: Xóa file trên server
+      tags: [Files]
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # 4. TERMINAL ACCESS (4 endpoints)
+  /api/terminal/execute:
+    post:
+      operationId: executeTerminalCommand
+      summary: Thực thi lệnh terminal
+      tags: [Terminal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command: {type: string}
+                background: {type: boolean, default: false}
+                sudo: {type: boolean, default: false}
+      responses:
+        '200':
+          $ref: '#/components/responses/CommandResult'
+
+  /api/terminal/interactive:
+    post:
+      operationId: executeInteractiveCommand
+      summary: Thực thi lệnh tương tác
+      tags: [Terminal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command: {type: string}
+                responses: {type: object}
+      responses:
+        '200':
+          $ref: '#/components/responses/CommandResult'
+
+  # 5. CODE MANAGEMENT (4 endpoints)
+  /api/code/write:
+    post:
+      operationId: writeCodeFile
+      summary: Ghi nội dung vào file code
+      tags: [Code]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filePath: {type: string}
+                content: {type: string}
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/code/read:
+    get:
+      operationId: readCodeFile
+      summary: Đọc nội dung file code
+      tags: [Code]
+      parameters:
+        - name: filePath
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Nội dung code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content: {type: string}
+
+  # 6. APK TOOLS (3 endpoints)
+  /api/apk/analyze:
+    post:
+      operationId: analyzeApk
+      summary: Phân tích file APK
+      tags: [APK]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apkPath: {type: string}
+      responses:
+        '200':
+          description: Kết quả phân tích
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APKAnalysis'
+
+  /api/apk/decompile:
+    post:
+      operationId: decompileApk
+      summary: Decompile APK
+      tags: [APK]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apkPath: {type: string}
+                outputPath: {type: string}
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # 7. EMULATOR CONTROL (3 endpoints)  
+  /api/emulator/execute-adb:
+    post:
+      operationId: executeAdbCommand
+      summary: Thực thi lệnh ADB
+      tags: [Emulator]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command: {type: string}
+                emulatorSerial: {type: string}
+      responses:
+        '200':
+          $ref: '#/components/responses/CommandResult'
+
+components:
+  schemas:
+    SystemInfo:
+      type: object
+      properties:
+        cpu:
+          type: array
+          items:
+            type: object
+            properties:
+              usage: {type: number}
+              core: {type: integer}
+        memory: 
+          type: object
+          properties:
+            total: {type: number}
+            free: {type: number}
+            usage: {type: string}
+        uptime: {type: number}
+        platform: {type: string}
+        arch: {type: string}
+
+    ProcessInfo:
+      type: object
+      properties:
+        pid: {type: integer}
+        command: {type: string}
+        cpu: {type: number}
+        memory: {type: number}
+        status: {type: string}
+
+    TaskStatus:
+      type: object
+      properties:
+        taskId: {type: string}
+        status: {type: string, enum: [pending, running, completed, failed, stopped]}
+        progress: {type: number}
+        result: {type: object}
+        error: {type: string}
+        startTime: {type: string, format: date-time}
+        endTime: {type: string, format: date-time}
+
+    APKAnalysis:
+      type: object
+      properties:
+        packageName: {type: string}
+        version: {type: string}
+        permissions: {type: array, items: {type: string}}
+        components: {type: object}
+
+  responses:
+    Success:
+      description: Thao tác thành công
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: {type: string}
+
+    CommandResult:
+      description: Kết quả thực thi lệnh
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              output: {type: string}
+              exitCode: {type: integer}
+              error: {type: string}
+
+    FileUploadSuccess:
+      description: Upload file thành công
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: {type: string}
+              file: {type: string}
+
+tags:
+  - name: System
+    description: Quản lý hệ thống
+  - name: Tasks  
+    description: Quản lý tác vụ dài
+  - name: Files
+    description: Quản lý file
+  - name: Terminal
+    description: Thực thi lệnh terminal
+  - name: Code
+    description: Quản lý code
+  - name: APK
+    description: Công cụ APK
+  - name: Emulator
+    description: Điều khiển Emulator

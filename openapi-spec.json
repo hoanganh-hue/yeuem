@@ -1,0 +1,457 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Personal System API",
+    "description": "API hệ thống cá nhân với khả năng xử lý dữ liệu mạnh mẽ",
+    "version": "1.0.0",
+    "metadata": {
+      "last_updated": "2025-02-23",
+      "validation_level": "minimal"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://doremonsieucap88.com",
+      "description": "Personal server"
+    }
+  ],
+  "x-system-config": {
+    "performance": {
+      "parallel_processing": true,
+      "streaming_enabled": true,
+      "memory_optimization": true,
+      "cache_enabled": false
+    },
+    "error_handling": {
+      "detailed_errors": true,
+      "stack_trace": true,
+      "auto_retry": true
+    },
+    "security": {
+      "validation": "minimal",
+      "authentication": "none",
+      "rate_limit": false
+    }
+  },
+  "paths": {
+    "/api/data/read-stream": {
+      "post": {
+        "summary": "Đọc dữ liệu lớn theo stream",
+        "tags": ["Data"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Đường dẫn file"
+                  },
+                  "chunk_size": {
+                    "type": "integer",
+                    "default": 52428800,
+                    "description": "Kích thước chunk (bytes)"
+                  },
+                  "parallel": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Cho phép xử lý song song"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data/write-stream": {
+      "post": {
+        "summary": "Ghi dữ liệu lớn theo stream",
+        "tags": ["Data"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "string"
+                  },
+                  "append": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/code/analyze": {
+      "post": {
+        "summary": "Phân tích code chi tiết",
+        "tags": ["Code"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "syntax": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "complexity": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "dependencies": {
+                        "type": "boolean",
+                        "default": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/terminal/execute-batch": {
+      "post": {
+        "summary": "Thực thi nhiều lệnh",
+        "tags": ["Terminal"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "commands": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "parallel": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-click": {
+      "post": {
+        "summary": "Click element bằng Appium",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "element_id": {
+                    "type": "string",
+                    "description": "ID của element cần click"
+                  },
+                  "wait_timeout": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Thời gian chờ tối đa (giây)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-type": {
+      "post": {
+        "summary": "Nhập text vào element bằng Appium",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "element_id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-screenshot": {
+      "post": {
+        "summary": "Chụp màn hình bằng Appium",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-status": {
+      "get": {
+        "summary": "Kiểm tra trạng thái Appium server",
+        "tags": ["GUI Automation"],
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/gui/appium-start": {
+      "post": {
+        "summary": "Khởi động Appium session mới",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "capabilities": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-stop": {
+      "post": {
+        "summary": "Dừng Appium session",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gui/appium-execute": {
+      "post": {
+        "summary": "Thực thi lệnh Appium tùy chỉnh",
+        "tags": ["GUI Automation"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DataOperation": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["read", "write", "analyze", "transform"]
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "streaming": {
+                "type": "boolean",
+                "default": true
+              },
+              "chunk_size": {
+                "type": "integer",
+                "default": 52428800
+              },
+              "parallel": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      },
+      "CodeOperation": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["write", "analyze", "format", "refactor", "debug", "compile", "execute"]
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "syntax_check": {
+                "type": "boolean",
+                "default": true
+              },
+              "memory_analysis": {
+                "type": "boolean",
+                "default": true
+              },
+              "performance_check": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      },
+      "SystemOperation": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["monitor", "process", "resource", "backup", "restore"]
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "detailed": {
+                "type": "boolean",
+                "default": true
+              },
+              "auto_retry": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Thao tác thành công",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": ["success"]
+                },
+                "data": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "description": "Lỗi",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": ["error"]
+                },
+                "message": {
+                  "type": "string"
+                },
+                "stack_trace": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Data",
+      "description": "Xử lý dữ liệu lớn"
+    },
+    {
+      "name": "Code",
+      "description": "Quản lý và phân tích code"
+    },
+    {
+      "name": "Terminal",
+      "description": "Thực thi lệnh hệ thống"
+    },
+    {
+      "name": "System",
+      "description": "Quản lý hệ thống"
+    },
+    {
+      "name": "Automation",
+      "description": "Tự động hóa tác vụ"
+    },
+    {
+      "name": "GUI Automation",
+      "description": "Quản lý và điều khiển automation trên GUI"
+    }
+  ]
+}

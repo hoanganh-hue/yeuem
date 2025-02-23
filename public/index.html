@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Manager Demo</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/taskClient.js"></script>
+</head>
+<body>
+    <div>
+        <h2>Task Manager Demo</h2>
+        <input type="text" id="command" placeholder="Enter command">
+        <button onclick="executeCommand()">Execute</button>
+        <button onclick="stopCurrentTask()">Stop Current Task</button>
+        <div id="status"></div>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const client = new TaskClient();
+        let currentTaskId = null;
+
+        async function executeCommand() {
+            const command = document.getElementById('command').value;
+            const status = document.getElementById('status');
+            const output = document.getElementById('output');
+
+            try {
+                status.textContent = 'Starting task...';
+                currentTaskId = null;
+                
+                const result = await client.executeCommand(command, {
+                    timeout: 300000 // 5 minutes
+                });
+
+                output.textContent = JSON.stringify(result, null, 2);
+                status.textContent = 'Task completed';
+
+            } catch (error) {
+                status.textContent = `Error: ${error.message}`;
+                console.error('Execute error:', error);
+            }
+        }
+
+        async function stopCurrentTask() {
+            if (!currentTaskId) {
+                alert('No task running');
+                return;
+            }
+
+            try {
+                await client.stopTask(currentTaskId);
+                document.getElementById('status').textContent = 'Task stopped';
+            } catch (error) {
+                console.error('Stop task error:', error);
+                alert(error.message);
+            }
+        }
+
+        // Listen for task updates
+        window.addEventListener('taskUpdate', (e) => {
+            const data = e.detail;
+            currentTaskId = data.taskId;
+            
+            const status = document.getElementById('status');
+            status.textContent = `Task ${data.taskId}: ${data.status} (${data.progress}%)`;
+            
+            if (data.output) {
+                document.getElementById('output').textContent += data.output + '\n';
+            }
+        });
+    </script>
+</body>
+</html>

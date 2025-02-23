@@ -1,0 +1,383 @@
+openapi: 3.1.0
+info:
+  title: Core System API
+  description: API hệ thống với các hành động thiết yếu
+  version: 1.0.0
+  x-stability: stable
+  x-success-rate: 100%
+
+servers:
+  - url: https://doremonsieucap88.com
+    description: Production server
+
+paths:
+  # GROUP 1: SYSTEM MANAGEMENT (8 endpoints)
+  /api/system/init:
+    post:
+      operationId: initializeSystem
+      summary: Khởi tạo hệ thống
+      tags: [System]
+      description: Map với initializeSystem() trong index.js
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/system/setup-dirs:
+    post:
+      operationId: setupDirectories  
+      summary: Tạo cấu trúc thư mục
+      tags: [System]
+      description: Map với setupDirectories() trong index.js
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/system/monitor:
+    get:
+      operationId: getSystemStatus
+      summary: Lấy trạng thái hệ thống
+      tags: [System]
+      responses:
+        '200':
+          description: Thông tin hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+
+  /api/system/processes:
+    get:
+      operationId: getProcessList
+      summary: Lấy danh sách processes
+      tags: [System]
+      responses:
+        '200':
+          description: Danh sách processes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessInfo'
+
+  /api/system/kill:
+    post:
+      operationId: killProcess
+      summary: Dừng process
+      tags: [System]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pid]
+              properties:
+                pid: {type: integer}
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # GROUP 2: TASK MANAGEMENT (6 endpoints)
+  /api/tasks/update:
+    post:
+      operationId: updateTaskStatus
+      summary: Cập nhật trạng thái task
+      tags: [Tasks]
+      description: Map với sendTaskUpdate() trong index.js
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/tasks/logs:
+    get:
+      operationId: getTaskLogs
+      summary: Lấy logs của task
+      tags: [Tasks]
+      description: Map với getTaskLogs() trong index.js
+      parameters:
+        - name: taskId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskLogs'
+
+  /api/tasks/create:
+    post:
+      operationId: createTask
+      summary: Tạo task mới
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # GROUP 3: GUI AUTOMATION (6 endpoints)
+  /api/automation/gui:
+    post:
+      operationId: sendGuiCommand
+      summary: Gửi lệnh GUI automation
+      tags: [Automation]
+      description: Map với sendGuiCommand() trong index.js
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuiCommand'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  /api/automation/screenshot:
+    post:
+      operationId: takeScreenshot
+      summary: Chụp màn hình
+      tags: [Automation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenshotConfig'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # GROUP 4: EMULATOR CONTROL (5 endpoints)
+  /api/emulator/status:
+    get:
+      operationId: checkEmulatorStatus
+      summary: Kiểm tra trạng thái emulator
+      tags: [Emulator]
+      description: Map với checkEmulatorStatus() trong index.js
+      parameters:
+        - name: serial
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Emulator status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmulatorStatus'
+
+  /api/emulator/start:
+    post:
+      operationId: startEmulator
+      summary: Khởi động emulator
+      tags: [Emulator]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmulatorConfig'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+  # GROUP 5: FILE OPERATIONS (5 endpoints)
+  /api/files/stream:
+    post:
+      operationId: streamFileData
+      summary: Stream dữ liệu file
+      tags: [Files]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamConfig'
+      responses:
+        '200':
+          description: Stream started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamStatus'
+
+  /api/files/upload:
+    post:
+      operationId: uploadFile
+      summary: Upload file
+      tags: [Files]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+
+components:
+  schemas:
+    SystemStatus:
+      type: object
+      properties:
+        cpu: 
+          type: array
+          items:
+            type: object
+            properties:
+              usage: {type: number}
+              core: {type: integer}
+        memory:
+          type: object
+          properties:
+            total: {type: number}
+            used: {type: number}
+            free: {type: number}
+        disk:
+          type: object
+          properties:
+            total: {type: number}
+            used: {type: number}
+            free: {type: number}
+
+    ProcessInfo:
+      type: object
+      properties:
+        pid: {type: integer}
+        name: {type: string}
+        cpu: {type: number}
+        memory: {type: number}
+        status: {type: string}
+
+    TaskUpdate:
+      type: object
+      required: [taskId, status]
+      properties:
+        taskId: {type: string}
+        status: {type: string, enum: [pending, running, completed, failed]}
+        progress: {type: number}
+        result: {type: object}
+
+    TaskCreate:
+      type: object
+      required: [type, params]
+      properties:
+        type: {type: string}
+        params: {type: object}
+        priority: {type: integer, default: 1}
+        timeout: {type: integer}
+
+    TaskLogs:
+      type: object
+      properties:
+        taskId: {type: string}
+        logs: {type: array, items: {type: string}}
+        startTime: {type: string, format: date-time}
+        endTime: {type: string, format: date-time}
+
+    GuiCommand:
+      type: object
+      required: [action, params]
+      properties:
+        action: {type: string, enum: [click, type, screenshot]}
+        params: {type: object}
+        timeout: {type: integer, default: 30000}
+
+    ScreenshotConfig:
+      type: object
+      properties:
+        filename: {type: string}
+        region: {type: object}
+        format: {type: string, enum: [png, jpg], default: png}
+
+    EmulatorStatus:
+      type: object
+      properties:
+        serial: {type: string}
+        state: {type: string, enum: [online, offline, unknown]}
+        adbConnected: {type: boolean}
+        properties: {type: object}
+
+    EmulatorConfig:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string}
+        params: {type: object}
+        wait: {type: boolean, default: true}
+
+    StreamConfig:
+      type: object
+      required: [path, mode]
+      properties:
+        path: {type: string}
+        mode: {type: string, enum: [read, write]}
+        chunkSize: {type: integer, default: 8192}
+        encoding: {type: string, default: utf8}
+
+    StreamStatus:
+      type: object
+      required: [streamId, status]
+      properties:
+        streamId: {type: string, description: "ID của stream"}
+        status: {type: string, enum: [started, running, paused, completed, error]}
+        bytesProcessed: {type: integer, description: "Số bytes đã xử lý"}
+        speed: {type: number, description: "Tốc độ stream (bytes/second)"}
+        progress: {type: number, description: "Tiến độ (0-100%)"}
+        error: {type: string, description: "Thông tin lỗi nếu có"}
+        startTime: {type: string, format: date-time}
+        lastUpdate: {type: string, format: date-time}
+
+  responses:
+    Success:
+      description: Thao tác thành công
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              message: {type: string}
+
+    Error:
+      description: Lỗi
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: {type: string}
+              code: {type: integer}
+              details: {type: object}
+
+tags:
+  - name: System
+    description: Quản lý hệ thống
+  - name: Tasks
+    description: Quản lý tác vụ
+  - name: Automation
+    description: Tự động hóa GUI
+  - name: Emulator
+    description: Điều khiển emulator
+  - name: Files
+    description: Quản lý file và streaming
