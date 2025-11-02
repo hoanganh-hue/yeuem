@@ -45,7 +45,7 @@
     "python-ast": "^0.1.0",
     "redis": "^4.6.13",
     "robotjs": "^0.6.0",
-    "screenshot-desktop": "^1.15.0",
+    "screenshot-desktop": "^1.15.2",
     "selenium-webdriver": "^4.18.1",
     "socket.io": "^4.7.4",
     "string-similarity": "^4.0.4",
